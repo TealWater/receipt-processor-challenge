@@ -1,3 +1,23 @@
+
+# Requirements
+
+Go v1.21.5 or greater installed
+
+Golang Gin Framework: `https://github.com/gin-gonic/gin/tree/master` (latest)
+
+A working computer
+
+A rubber ducky named Mason
+
+`run: go run main.go`
+
+Test using postman or in your browser
+
+Server is running on port `8080`
+
+
+
+_________
 # Receipt Processor
 
 Build a webservice that fulfils the documented API. The API is described below. A formal definition is provided 
