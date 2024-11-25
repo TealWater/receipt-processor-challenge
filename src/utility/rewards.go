@@ -12,10 +12,10 @@ import (
 	"github.com/TealWater/fetch-rewards/model"
 )
 
-func ValidateName(name string) (*int, error) {
+func ValidateName(name string) (int, error) {
 	isValid, err := regexp.MatchString("^[\\w\\s\\-&]+$", name)
 	if err != nil || !isValid {
-		return nil, errors.New("Retailer name on the receipt is invalid. Please submit a name that contains only alpha-numeric characters.\nex: \"Buy Me 50 Coffees-Co\"")
+		return 0, errors.New("Retailer name on the receipt is invalid. Please submit a name that contains only alpha-numeric characters.\nex: \"Buy Me 50 Coffees-Co\"")
 	}
 
 	points := 0
@@ -24,30 +24,47 @@ func ValidateName(name string) (*int, error) {
 			points++
 		}
 	}
-	return &points, nil
+	return points, nil
 }
 
-func ValidateTotal(total float64) int {
-	if math.Trunc(total) == total {
-		return 50
+func ValidateTotal(amnt string) (int, error) {
+	subTotal, err := strconv.ParseFloat(amnt, 64)
+	total := 0
+	if err != nil {
+		return 0, errors.New("The total provided on the receipt is malformed")
 	}
 
-	if math.Mod(total, 0.25) == 0 {
-		return 25
+	if math.Trunc(subTotal) == subTotal {
+		total += 50
 	}
-	return 0
+
+	if math.Mod(subTotal, 0.25) == 0 {
+		total += 25
+	}
+	return total, nil
 }
 
 func CountItems(items []model.Item) int {
 	return (len(items) / 2) * 5
 }
 
-func ValidateItemDescription(items []model.Item) int {
+func ValidateItemDescription(items []model.Item) (int, error) {
 	points := 0
 	for _, v := range items {
+		if len(v.ShortDescription) < 1 {
+			return 0, errors.New("Invalid Item Description provided")
+		}
+
+		if len(v.Price) < 1 {
+			return 0, errors.New("Price tag is malformed")
+		}
+
 		trimLen := len(strings.TrimSpace(v.ShortDescription))
 		if math.Mod(float64(trimLen), 3) == 0 {
-			val, _ := strconv.ParseFloat(v.Price, 64)
+			val, err := strconv.ParseFloat(v.Price, 64)
+			if err != nil {
+				return 0, errors.New("Invalid Price provided")
+			}
 			val = val * 0.2
 
 			//if val is xx.00 -> its already at nearest int. if xx.01+ -> neareast int is up 1
@@ -58,7 +75,7 @@ func ValidateItemDescription(items []model.Item) int {
 			}
 		}
 	}
-	return points
+	return points, nil
 }
 
 func ValidatePurchaseDate(date string) (int, error) {
@@ -73,13 +90,24 @@ func ValidatePurchaseDate(date string) (int, error) {
 	return 0, nil
 }
 
-func ValidatePurchaseTime(time string) int {
+func ValidatePurchaseTime(time string) (int, error) {
 	parsed := strings.Split(time, ":")
-	hour, _ := strconv.Atoi(parsed[0])
-	min, _ := strconv.Atoi(parsed[1])
+	if len(parsed) != 2 {
+		return 0, errors.New("Invalid Time provided.")
+	}
+
+	hour, err := strconv.Atoi(parsed[0])
+	if err != nil {
+		return 0, errors.New("Invalid Time provided.")
+	}
+
+	min, err := strconv.Atoi(parsed[1])
+	if err != nil {
+		return 0, errors.New("Invalid Time provided.")
+	}
 
 	if hour == 14 && min >= 1 || hour > 14 && hour < 16 {
-		return 10
+		return 10, nil
 	}
-	return 0
+	return 0, nil
 }

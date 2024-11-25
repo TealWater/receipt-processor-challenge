@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 
+	"github.com/TealWater/fetch-rewards/controller"
 	"github.com/gin-gonic/gin"
 )
 
@@ -14,6 +15,12 @@ func main() {
 			"message": "Hi Mom!",
 		})
 	})
+
+	receipts := r.Group("/receipts")
+	{
+		receipts.POST("/process", controller.ProcessReceipt)
+		receipts.GET("/:id/points")
+	}
 
 	r.Run(":8080")
 }
